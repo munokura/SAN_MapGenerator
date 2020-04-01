@@ -8,8 +8,9 @@
 
 /*:
  * @plugindesc 自動マップ生成 1.1.9
- * 自動的にマップを生成しイベントを配置します。
- * @author サンシロ https://twitter.com/rev2nym
+ * 自動的にランダムマップを生成します。
+ * @author サンシロ https://twitter.com/rev2nym 改変 ムノクラ
+ * 通路脇にイベントを配置しないように改変。
  * 
  * @param WallHight
  * @desc 壁の高さを指定します。（1～3）
@@ -364,7 +365,7 @@ Game_MapGenerator.prototype.generateMap = function() {
     }
 };
 
-// イベントの設置
+// イベントの設置：改変
 Game_MapGenerator.prototype.setEvent = function(event, targetSymbols, targetArea) {
     targetSymbols = targetSymbols || ['room'];
     targetArea = targetArea || {x:0, y:0, w:$dataMap.width, h:$dataMap.height};
@@ -378,9 +379,22 @@ Game_MapGenerator.prototype.setEvent = function(event, targetSymbols, targetArea
         for (var i = 0; i < Math.pow(targetArea.w * targetArea.h, 2); i++) {
             var x = targetArea.x + Math.randomInt(targetArea.w);
             var y = targetArea.y + Math.randomInt(targetArea.h);
+            var aroundPass = false;
+            for (var x2 = x - 1; x2 < x + 2; x2++) {
+                for (var y2 = y - 1; y2 < y + 2; y2++) {
+                    if (!$gameMap.isValid(x2, y2)) {
+                        break;
+                    }
+                    if (this._symbolMap[x2][y2] === 'pass') {
+                        aroundPass = true;
+                        break;
+                    }
+                }
+            }
             if ($gameMap.eventsXy(x, y).length === 0 &&
-                targetSymbols.indexOf(this._symbolMap[x][y]) !== -1)
-            {
+                targetSymbols.indexOf(this._symbolMap[x][y]) !== -1 &&
+                !aroundPass
+            ) {
                 break;
             }
         }
